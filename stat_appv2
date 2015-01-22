@@ -1,0 +1,438 @@
+# pour utiliser cette fonction 
+# 1) se mettre dans le répertoire ou la fonction est enregistrée via
+# par exemple:  setwd("C:/Users/Alexandre/Documents/projet acpr-banque_de_france/")
+# 2) mettre  la base de donnée dans le même répertoire (j'ai appelé la bdd: bdd_acpr_v2.csv)
+# 3) taper source("stat_appv2.R") (c'est le nom de la fonction .R, cela permet de la déclarer)
+# 4) taper bdd<-stat_app() permet d'obtenir la base de donnée soignée comme il se doit
+
+stat_app<-function()
+{
+source("analyse_1_d.R")
+source("analyse_2_d.R")
+
+#setwd("C:/Program Files/R/R-3.1.2/library") librairie à télécharger
+library(questionr)
+
+# package qui permet de faire un superbe summary -> merci Sylvain!!
+#install.packages("stargazer")
+library(stargazer)
+
+# Jeu de données stat_app acpr sur les mutuelles
+#setwd("C:/Users/Alexandre/Documents/projet acpr-banque_de_france/")
+bdd<-read.csv("C:/Users/Alexandre/Documents/projet acpr-banque_de_france/bdd_acpr_v2.csv",sep=";",header=TRUE)
+
+################### Renommer les variables############################################
+
+
+# F = frais
+# nv = non vie v = vie
+# Cg = charge
+# CT = compte de résultat technique
+# C = compte de résultat non technique
+# A = agrément
+# B = brut, N = Net
+# PT = provisions techniques
+
+# variable du d'en tête
+bdd<-rename.variable(bdd,"nombre.de.substituées", "nb_subst")
+bdd<-rename.variable(bdd,"Comptes_combinés", "combi")
+bdd<-rename.variable(bdd,"TETE_DE_GROUPE", "Tete_gp")
+bdd<-rename.variable(bdd,"Id_groupe", "Id_gp")
+
+# Agréments
+bdd<-rename.variable(bdd,"Date.agrément.branche.1", "A1")
+bdd<-rename.variable(bdd,"Date.agrément.branche.2", "A2")
+bdd<-rename.variable(bdd,"Date.agrément.branche.15", "A15")
+bdd<-rename.variable(bdd,"Date.agrément.branche.16", "A16")
+bdd<-rename.variable(bdd,"Date.agrément.branche.17", "A17")
+bdd<-rename.variable(bdd,"Date.agrément.branche.18", "A18")
+bdd<-rename.variable(bdd,"Date.agrément.branche.20", "A20")
+bdd<-rename.variable(bdd,"Date.agrément.branche.21", "A21")
+bdd<-rename.variable(bdd,"Date.agrément.branche.22", "A22")
+bdd<-rename.variable(bdd,"Date.agrément.branche.23", "A23")
+bdd<-rename.variable(bdd,"Date.agrément.branche.24", "A24")
+bdd<-rename.variable(bdd,"Date.agrément.branche.25", "A25")
+bdd<-rename.variable(bdd,"Date.agrément.branche.26", "A26")
+
+#Variables de l'actif
+bdd <- rename.variable(bdd,"BILA...actifs.incorporels", "BA_Incorp")
+bdd <- rename.variable(bdd,"BILA...placements", "BA_plct")
+bdd <- rename.variable(bdd,"BILA...part.des.réassureurs.dans.les.PT", "BA_PTreass")
+bdd <- rename.variable(bdd,"BILA...créances", "BA_creances")
+bdd <- rename.variable(bdd,"BILA...actifs.corporels.d.exploitations.et.avoirs.en.banque", "BA_avoirs")
+bdd <- rename.variable(bdd,"BILA...total.actif", "BA_tot")
+
+#Variables du passif
+bdd <- rename.variable(bdd,"BILP...fonds.mutualistes", "BP_FdMutu")
+bdd <- rename.variable(bdd,"BILP...passifs.subordonnées", "BP_Psub")
+bdd <- rename.variable(bdd,"BILP...total.des.PT", "BP_PT")
+bdd <- rename.variable(bdd,"BILP...provision.pour.risque.et.charges..provision.non.technique.", "BP_PNT")
+bdd <- rename.variable(bdd,"BILP...dettes", "BP_dettes")
+bdd <- rename.variable(bdd,"BILP...total.du.passif", "BP_tot")
+bdd<-rename.variable(bdd,"BILP...PCNA.non.vie", "BP_PCNAnv")
+bdd<-rename.variable(bdd,"BILP...PM.vie","BP_PMv")  
+bdd<-rename.variable(bdd,"BILP...PPAP.non.vie", "BP_PPAPnv") 
+bdd<-rename.variable(bdd,"BILP...PPE.vie","BP_PPEv")
+
+#Compte de résultat technique NON VIE
+
+bdd<- rename.variable(bdd,"CRTD...cotisations.acquises.brut", "CTnv_CotisB")
+bdd<- rename.variable(bdd,"CRTD...cotisations.acquises.net", "CTnv_CotisN")
+bdd<- rename.variable(bdd,"CRTD...produits.techniques", "CTnv_ProdTech")
+bdd<- rename.variable(bdd,"CRTD...frais.d.acquisition.et.d.administration", "CTnv_FAcq")
+bdd<- rename.variable(bdd,"CRTD...charges.techniques", "CTnv_CgTech")
+bdd<- rename.variable(bdd,"CRTD...charge.des.sinistres.brut", "CTnv_CgSinitresB")
+bdd<- rename.variable(bdd,"CRTD...charge.des.sinistres.net", "CTnv_CgSinitresN")
+bdd<- rename.variable(bdd,"CRTD...résultat.technique.net.non.vie", "CTnv_ResTechN")
+
+bdd<- rename.variable(bdd,"frais.de.gestion.non.vie", "FGestion_nv")
+
+#Compte de résultat technique VIE
+bdd <- rename.variable(bdd,"CRTV...cotisations.brut", "CTv_CotisB")
+bdd <- rename.variable(bdd,"CRTV...cotisations.net", "CTv_CotisN")
+bdd <- rename.variable(bdd,"CRTV...produits.techniques", "CTv_ProdTech")
+bdd <- rename.variable(bdd,"CRTV...frais.d.acquisition.et.d.administration", "CTv_FAcq")
+bdd <- rename.variable(bdd,"CRTV...charges.techniques", "CTv_CgTech")
+bdd <- rename.variable(bdd,"CRTV...prestations.brut", "CTv_PrestaB")
+bdd <- rename.variable(bdd,"CRTV...prestations.net", "CTv_PrestaN")
+bdd <- rename.variable(bdd,"CRTV...résultat.technique.vie.net", "CTv_ResTechN")
+
+bdd <- rename.variable(bdd,"frais.de.gestion.vie", "FGestion_v")
+
+#Compte de résultat non technique
+bdd <- rename.variable(bdd,"CRNT...produit.des.placements..hors.alloués.du.compte.vie", "C_ProdPlt_HAlloue_v")
+bdd <- rename.variable(bdd,"CRNT...produit.des.placements.alloués.du.compte.vie", "C_ProdPlt_Alloue_v")
+bdd <- rename.variable(bdd,"CRNT...charge.des.placements", "C_CgPlt")
+bdd <- rename.variable(bdd,"CRNT...résultat.total", "C_ResTot")
+
+#On supprime 2 variables en double :
+bdd <- bdd[,colnames(bdd)!="CRNT...produit.des.placements.alloués.du.compte.vie.1"]
+bdd <- bdd[,colnames(bdd)!="CRNT...charge.des.placements.1"]
+
+#Etat récapitulatif des placements
+bdd <- rename.variable(bdd,"N3122...placements.immobilier.VNC", "immo_VNC")
+bdd <- rename.variable(bdd,"N3122...placements.immobilier.VR", "immo_VR")
+bdd <- rename.variable(bdd,"N3122...placements.actions.VNC", "actions_VNC")
+bdd <- rename.variable(bdd,"N3122...placements.actions.VR", "actions_VR")
+bdd <- rename.variable(bdd,"N3122...OPCVM.revenus.variables.VNC", "OPCVM_var_VNC")
+bdd <- rename.variable(bdd,"N3122...OPCVM.revenus.variables.VR", "OPCVM_var_VR")
+bdd <- rename.variable(bdd,"N3122...OPCVM.revenus.fixes.VNC", "OPCVM_fixe_VNC")
+bdd <- rename.variable(bdd,"N3122...OPCVM.revenus.fixes.VR", "OPCVM_fixe_VR")
+bdd <- rename.variable(bdd,"N3122...obligations.VNC", "oblig_VNC")
+bdd <- rename.variable(bdd,"N3122...obligations.VR", "oblig_VR")
+bdd <- rename.variable(bdd,"N3122...prêts.hypothécaires.VNC", "hypo_VNC")
+bdd <- rename.variable(bdd,"N3122...prêts.hypothécaires.VR", "hypo_VR")
+bdd <- rename.variable(bdd,"N3122...autres.prêts.VNC", "autre_pret_VNC")
+bdd <- rename.variable(bdd,"N3122...autres.prêts.VR", "autre_pret_VR")
+bdd <- rename.variable(bdd,"N3122..dépôts.VNC", "depot_VNC")
+bdd <- rename.variable(bdd,"N3122..dépôts.VR", "depot_VR")
+bdd <- rename.variable(bdd,"N3122...total.des.placements.VNC", "Plt_tot_VNC")
+bdd <- rename.variable(bdd,"N3122...total.des.placements.VR", "Plt_tot_VR")
+bdd <- rename.variable(bdd,"N3122...total.des.placements.ammortissables.VNC", "Plt_amort_VNC")
+bdd <- rename.variable(bdd,"N3122...total.des.placements.ammortissables.VR", "Plt_amort_VR")
+
+#Annexes du bilan et compte de résultat demandées par l'ACPR
+
+#Attention nous savons que ces variables prennent des valeurs qui ne correspondent pas à la réalité de la situation des mutuelles présentes dans la base
+bdd <- rename.variable(bdd,"N317...écart.de.liquidation.brut", "ecart_liquid_brut")
+bdd <- rename.variable(bdd,"N317...écart.de.liquidation.net", "ecart_liquid_net")
+
+bdd <- rename.variable(bdd,"N322A...solde.de.souscription.vie", "solde_souscrip_V")
+bdd <- rename.variable(bdd,"N328...effectif.moyen.du.personnel", "nb_personnel_moyen")
+bdd <- rename.variable(bdd,"N328...total.des.rémunérations.du.personnel", "remun_personnel")
+
+bdd <- rename.variable(bdd,"C1MD...charge.de.la.réassurance.non.vie", "charge_reassurance_NV")
+bdd <- rename.variable(bdd,"C1MD...cotisations.dommages.individuel", "cotis_dmg_ind")
+bdd <- rename.variable(bdd,"C1MD...cotisations.dommages.collectif", "cotis_dmg_coll")
+bdd <- rename.variable(bdd,"C1MD...prestations.dommages.individuel", "presta_dmg_ind")
+bdd <- rename.variable(bdd,"C1MD...prestations..dommages.collectif", "presta_dmg_coll")
+bdd <- rename.variable(bdd,"C1MD...résultat.technique.dommages.individuel", "res_tech_dmg_ind")
+bdd <- rename.variable(bdd,"C1MD...résultat.technique..dommages.collectif", "res_tech_dmg_coll")
+bdd <- rename.variable(bdd,"C1MV...charge.de.réassurance.vie", "charge_reass_V")
+bdd <- rename.variable(bdd,"C3M_...cotisation.acceptées.réassurance", "cotis_acc_reass")
+bdd <- rename.variable(bdd,"C3M_...PT.acceptées.réassurance", "PT_acc_reass")
+bdd <- rename.variable(bdd,"C3M_...PT.cédées.réassurance", "PT_ced_reass")
+bdd <- rename.variable(bdd,"C3M_...cotisations.acceptées.substitution", "cotis_acc_subst")
+bdd <- rename.variable(bdd,"C3M_...PT.acceptées.substitution", "PT_acc_subst")
+bdd <- rename.variable(bdd,"C3M_...cotisations.cédées.substitution", "cotis_ced_subst")
+bdd <- rename.variable(bdd,"C3M_...PT.cédées.substitution", "PT_ced_subst")
+bdd <- rename.variable(bdd,"C5...base.de.dispersion", "base_dispersion")
+bdd <- rename.variable(bdd,"C5...placements.admissibles", "Plt_admissibles")
+bdd <- rename.variable(bdd,"C6ME7...exigence.non.vie", "exigence_NV")
+bdd <- rename.variable(bdd,"C6ME7...exigence.vie", "exigence_V")
+bdd <- rename.variable(bdd,"C6ME7...marge", "marge")
+
+#Compléments à apporter à la sécurité sociale (souvent mal rempli)
+bdd <- rename.variable(bdd,"E1B_...nombre.d.adhérents.individuel.santé", "nb_adh_sante_ind")
+bdd <- rename.variable(bdd,"E1B_...nombre.de.personnes.protégées.individuel.santé", "nb_prot_sante_ind")
+bdd <- rename.variable(bdd,"E1B_...nombre.de.contrats.collectif.santé", "nb_contrat_sante_coll")
+bdd <- rename.variable(bdd,"E1B_...nombre.d.adhérents.collectif.santé", "nb_adh_sante_coll")
+bdd <- rename.variable(bdd,"E1B_...nombre.de.personnes.protégées.collectif.santé", "nb_prot_sante_coll")
+bdd <- rename.variable(bdd,"E1B_...nombre.d.adhérents.sans.double.compte", "nb_adh_sans_double_compte")
+bdd <- rename.variable(bdd,"Nombre.d.onglets.remplis.dans.le.fichier.excel.remis", "nb_onglet_rempli")
+
+###########################gestion des NA et erreurs ###################################
+########################################################################################
+
+bdd$Id_gp = ifelse(bdd$Id_gp == "#N/D", 0, bdd$Id_gp)
+bdd$nb_subst = ifelse(bdd$nb_subst == "#N/D", 0, bdd$nb_subst)
+
+#remplacer tous les 1899 par des na pour les agréments (1899 dans la base
+#est une valeur par défaut)
+
+for( i in 8:20)
+{
+	for( j in 1:592)
+	{
+	if(bdd[j,i]=="1899")
+		bdd[j,i]<-"na"
+	}
+}
+
+#transformation de type numerique ou format pour les 20 ères variables 
+# ID, combi, substituées, agréments
+
+for(i in 1:20)
+{
+bdd[,i]<-as.factor(bdd[,i])
+}
+
+#transformation des , en . pour les variables numériques
+
+for(i in 20:109)
+{
+	bdd[,i]<-gsub("[,]",".",bdd[,i])
+	bdd[,i]<-as.numeric(bdd[,i])
+}
+
+# suppression des individus totalement substitués car leur chiffre d'affaire est totalement 
+# inclus dans une autre mutuelle
+bdd_reduite<-bdd[bdd$Type_Subst !="SUB TOT",]
+
+
+#on supprime toutes les mutuelles n'ayant pas répondu, tels que nb_onglet_rempli = -1
+bdd_reduite<- bdd_reduite[bdd_reduite$nb_onglet_rempli !="-1",]
+
+
+#SUPPRESSION DES MUTUELLES AYANT DES VALEURS ABERRANTES POUR DES VARIABLES ESSENTIELLES
+#test sur l'ecart actif passif des mutuelles. Si celui-ci est suppérieur à 1% du total, on suppprime
+#On suppprime les mutuelles ayant un écart entre l'actif et le passif supérieur à 5%
+# il n'y a que l'ID = 267
+
+bdd_reduite$Ecart_AP <- ifelse((100*(bdd_reduite$BA_tot - bdd_reduite$BP_tot)/ bdd_reduite$BP_tot)<=1,0,1)
+bdd_reduite <- subset(bdd_reduite, bdd_reduite$Ecart_AP< 0.05)
+
+#La VNC des actions ne peut pas être négative
+#On met NA pour la mutuelle qui a un nombre négatif
+bdd_reduite$actions_VNC[bdd_reduite$actions_VNC<0]<-NA
+
+
+#Les produits techniques ne doivent pas être négatifs, les pertes doivent aller dans les charges et le produit technique à 0..
+#  Cas du compte de résultat non vie
+verif2=subset(bdd_reduite, bdd_reduite$CTnv_ProdTech<0)
+
+for (j in verif2$ID)
+{
+	bdd_reduite$CTnv_CgTech[bdd_reduite$ID==j] <- bdd_reduite$CTnv_CgTech[bdd_reduite$ID==j]- bdd_reduite$CTnv_ProdTech[bdd_reduite$ID==j]
+	bdd_reduite$CTnv_ProdTech[bdd_reduite$ID==j] <- 0
+}
+
+#   Cas du compte de résultat vie
+verif4=subset(bdd_reduite,bdd_reduite$CTv_ProdTech<0)
+for (j in verif4$ID)
+{
+	bdd_reduite$CTv_CgTech[bdd_reduite$ID==j]<-bdd_reduite$CTv_CgTech[bdd_reduite$ID==j]-bdd_reduite$CTv_ProdTech[bdd_reduite$ID==j]; 
+	bdd_reduite$CTv_ProdTech[bdd_reduite$ID==j]<-0
+}
+
+# si aucun placement n'est fait, on met toutes les variables placements à NA et on vérifie
+# que la charge des placements est bien à NA. Deux cas de figures, valeur réelle et valeur nette comptable
+# VR ET vnc:
+
+subVNC = subset(bdd_reduite, (bdd_reduite$Plt_tot_VNC==0))
+for(j in subVNC$ID)
+{
+	bdd_reduite$C_CgPlt[bdd_reduite$ID==j] <- NA
+	bdd_reduite$immo_VNC[bdd_reduite$ID == j]<- NA
+	bdd_reduite$actions_VNC[bdd_reduite$ID == j]<- NA
+	bdd_reduite$oblig_VNC[bdd_reduite$ID == j]<- NA
+	bdd_reduite$OPCVM_var_VNC[bdd_reduite$ID == j]<- NA
+	bdd_reduite$OPCVM_fixe_VNC[bdd_reduite$ID == j]<- NA
+	bdd_reduite$hypo_VNC[bdd_reduite$ID == j]<- NA
+	bdd_reduite$autre_pret_VNC[bdd_reduite$ID == j]<- NA
+	bdd_reduite$depot_VNC[bdd_reduite$ID == j]<- NA
+}
+
+subVR = subset(bdd_reduite, bdd_reduite$Plt_tot_VR==0)
+for(j in subVR$ID)
+{
+	bdd_reduite$immo_VR[bdd_reduite$ID == j]<- NA
+	bdd_reduite$actions_VR[bdd_reduite$ID == j]<- NA
+	bdd_reduite$oblig_VR[bdd_reduite$ID == j]<- NA
+	bdd_reduite$OPCVM_var_VR[bdd_reduite$ID == j]<- NA
+	bdd_reduite$OPCVM_fixe_VR[bdd_reduite$ID == j]<- NA
+	bdd_reduite$hypo_VR[bdd_reduite$ID == j]<- NA
+	bdd_reduite$autre_pret_VR[bdd_reduite$ID == j]<- NA
+	bdd_reduite$depot_VR[bdd_reduite$ID == j]<- NA
+}
+
+#si en moyenne il n'y a pas de salarie, on met la remuneration des salariés à NA
+bdd_renum = subset(bdd_reduite, bdd_reduite$nb_personnel_moyen ==0)
+for(j in bdd_renum$ID)
+{
+	bdd_reduite$remun_personnel[bdd_reduite$ID == j]<- NA
+	
+}
+
+#L'actif ne doit pas être nul = ok
+#summary(bdd_reduite$total_actif)
+
+#Le passif ne doit pas être nul = ok
+#summary(bdd_reduite$total_passif)
+
+#Les fonds propres ne doivent pas être nuls = ok
+#summary(bdd_reduite$fonds_mutualistes)
+
+#Les cotisations ne doivent pas être nulles =ok
+#total_cotis=bdd_reduite$cotis_brut_NV + bdd_reduite$cotis_brut_V
+#Effectivement aucune mutuelle n'a 0 cotisations (vie + non-vie mélangé)
+
+#aucune mutuelle n'a plus d'amortissement que de placement = ok
+
+#La somme des types de placements devrait être à peu près égale au total des placements
+#pb2=subset(df_clean,abs(round(df_clean$immo_VNC+df_clean$actions_VNC+df_clean$OPCVM_var_VNC+df_clean$OPCVM_fixe_VNC+df_clean$oblig_VNC+df_clean$hypo_VNC+df_clean$autre_pret_VNC+df_clean$depot_VNC - df_clean$placements_total_VNC, digits=0))>((10*df_clean$placements_total_VNC)/100))
+#dim(pb2)
+#max(abs(round(df_clean$immo_VNC+df_clean$actions_VNC+df_clean$OPCVM_var_VNC+df_clean$OPCVM_fixe_VNC+df_clean$oblig_VNC+df_clean$hypo_VNC+df_clean$autre_pret_VNC+df_clean$depot_VNC - df_clean$placements_total_VNC, digits=0)))
+#Ce n'est pas du tout le cas... 17 mutuelles ont une différence de plus de 10% du total des placements
+#En fait tous les types de placements ne sont pas dans la base de données
+
+#Les placements + avoirs ne devraient pas être nuls = ok
+#fin=df_clean$placements+df_clean$avoirs
+#summary(fin)
+
+#Les provisions techniques ne doivent pas être nulles (sauf cas spécial)
+#summary(df_clean$PT)
+#which(df_clean$PT==0, arr.in=TRUE)
+#Il y a 5 mutuelles qui ont des PT égales à 0 = ok pour elles
+
+
+######################AJOUT DE VARIABLES############################################
+#Variable prestations/cotisations (si >100 alors plus de prestations que de cotisations)
+# donc pertes encourues
+
+bdd_reduite$PC_net_V <- ifelse(bdd_reduite$CTv_CotisN!=0, (bdd_reduite$CTv_PrestaN/bdd_reduite$CTv_CotisN)*100, NA)
+bdd_reduite$PC_net_NV <- ifelse(bdd_reduite$CTnv_CotisN!=0, (bdd_reduite$CTnv_CgSinitresN/bdd_reduite$CTnv_CotisN)*100, NA)
+bdd_reduite$PC_dom_indiv <- ifelse(bdd_reduite$cotis_dmg_ind!=0, (bdd_reduite$presta_dmg_ind/bdd_reduite$cotis_dmg_ind)*100, NA)
+bdd_reduite$PC_dom_coll <- ifelse(bdd_reduite$cotis_dmg_coll!=0, (bdd_reduite$presta_dmg_coll/bdd_reduite$cotis_dmg_coll)*100, NA)
+
+bdd_reduite$PC_net_NV= ifelse(bdd_reduite$PC_net_NV>= 500,NA,bdd_reduite$PC_net_NV)
+bdd_reduite$PC_net_NV = as.numeric(bdd_reduite$PC_net_NV)
+#Création des variables de plus-value sur les placements financiers
+
+bdd_reduite$immo_PVL <- ifelse(bdd_reduite$immo_VR >0, (bdd_reduite$immo_VR/bdd_reduite$immo_VNC)*100-100, NA)
+bdd_reduite$actions_PVL <-ifelse(bdd_reduite$actions_VR>0,(bdd_reduite$actions_VR/bdd_reduite$actions_VNC)*100-100, NA)
+bdd_reduite$OPCVM_var_PVL <- ifelse(bdd_reduite$OPCVM_var_VR>0,(bdd_reduite$OPCVM_var_VR/bdd_reduite$OPCVM_var_VNC)*100-100,NA)
+bdd_reduite$OPCVM_fixe_PVL <- ifelse(bdd_reduite$OPCVM_fixe_VR>0, (bdd_reduite$OPCVM_fixe_VR/bdd_reduite$OPCVM_fixe_VNC)*100-100, NA)
+bdd_reduite$oblig_PVL <-ifelse(bdd_reduite$oblig_VR>0, (bdd_reduite$oblig_VR/bdd_reduite$oblig_VNC)*100-100, NA)
+bdd_reduite$depot_PVL <- ifelse(bdd_reduite$depot_VR>0, (bdd_reduite$depot_VR/bdd_reduite$depot_VNC)*100-100,NA)
+bdd_reduite$placements_total_PVL <- ifelse(bdd_reduite$Plt_tot_VR>0, (bdd_reduite$Plt_tot_VR/bdd_reduite$Plt_tot_VNC)*100-100, NA)
+bdd_reduite$placements_amort_PVL <- ifelse(bdd_reduite$Plt_amort_VR>0, (bdd_reduite$Plt_amort_VR/bdd_reduite$Plt_amort_VNC)*100-100, NA)
+
+# observation de la part des placements dans le placement total VNC
+bdd_reduite$part_plt_immo <- ifelse(bdd_reduite$Plt_tot_VNC>=0, (bdd_reduite$immo_VNC/bdd_reduite$Plt_tot_VNC)*100, NA)
+bdd_reduite$part_plt_actions <- ifelse(bdd_reduite$Plt_tot_VNC>=0, (bdd_reduite$actions_VNC/bdd_reduite$Plt_tot_VNC)*100, NA)
+bdd_reduite$part_plt_OPCVM <- ifelse(bdd_reduite$Plt_tot_VNC>=0,(bdd_reduite$OPCVM_var_VNC+bdd_reduite$OPCVM_fixe_VNC)*100/bdd_reduite$Plt_tot_VNC, NA)
+bdd_reduite$part_plt_obligations <- ifelse(bdd_reduite$Plt_tot_VNC>=0,(bdd_reduite$oblig_VNC/bdd_reduite$Plt_tot_VNC)*100,NA)
+
+#observer l'ecart entre le brut et le net de cotisations par rapport à la charge de réassurance
+bdd_reduite$cotis_B_N_reass <- (bdd_reduite$CTnv_CotisB - bdd_reduite$CTnv_CotisN) - bdd_reduite$charge_reassurance_NV
+
+#Il faut que la marge soit supérieur aux exigences vie + non vie
+bdd_reduite$C6_exc <- bdd_reduite$marge - (bdd_reduite$exigence_NV+bdd_reduite$exigence_V)
+
+#dispersion = ce qu'il y a a couvrir < placements admissibles
+bdd_reduite$C5_exc <-(bdd_reduite$Plt_admissibles-bdd_reduite$base_dispersion)
+
+# verification de la variable liste agréments -> pas clean dutout donc on crée
+# une variable fusionnant les informations dans la variable liste agre de la base
+# avec celle qui vient d'être créée
+
+bdd_reduite$liste = ""
+for(j in 8: 19)
+{	
+	bdd_reduite$liste =ifelse(bdd_reduite[,j]!="na", paste(bdd_reduite$liste, gsub("A", "", names(bdd_reduite[j]))), bdd_reduite$liste)
+}
+# on supprime le permier espace pour que les 2 variables soient comparables
+bdd_reduite$liste = sub(" ","",bdd_reduite$liste)
+
+bdd_reduite$Liste_Agre<-gsub("[,]","",bdd_reduite$Liste_Agre)
+
+bdd_reduite$liste = ifelse(bdd_reduite$liste =="", bdd_reduite$Liste_Agre, bdd_reduite$liste)
+
+#On observe que 48 mutuelles ont des erreurs sur leur déclaration d'agrément par rapport aux A1 - A26!!!
+# liste agrément à l'air plus complet que l'ensemble des autres variables
+
+# creation de la variable de séparation entre les mutuelles vie, non vie et mixe
+# si l'agrément est 20,21 alors la mutuelle est vie sinon est fait du non vie ou du mixte
+# 0 = non vie, 1 = vie, 2 = mixte -> plus propre d'utiliser la condition sur  cotisation vie non vie
+
+bdd_reduite$branche <- ifelse((bdd_reduite$CTnv_CotisB!=0)&(bdd_reduite$CTnv_CgSinitresB!=0)&(bdd_reduite$CTv_CotisB==0)&(bdd_reduite$CTv_PrestaB==0) ,0,ifelse((bdd_reduite$CTv_CotisB!=0) &(bdd_reduite$CTnv_CotisB==0),1,2))
+
+bdd_reduite$branche = as.factor(bdd_reduite$branche)
+bdd_reduite$Liste_Agre = as.factor(bdd_reduite$Liste_Agre)
+
+# NA pour toutes les variables vie d'une mutuelle non vie et vis versa
+bdd_nonvie = subset(bdd_reduite, bdd_reduite$branche ==0)
+for(j in bdd_nonvie$ID)
+{
+	bdd_reduite$CTv_CotisB[bdd_reduite$ID == j]<- NA
+	bdd_reduite$CTv_CotisN[bdd_reduite$ID == j]<- NA
+	bdd_reduite$CTv_ProdTech[bdd_reduite$ID == j]<- NA
+	bdd_reduite$CTv_CotisB[bdd_reduite$ID == j]<- NA
+	bdd_reduite$CTv_FAcq[bdd_reduite$ID == j]<- NA
+	bdd_reduite$CTv_CgTech[bdd_reduite$ID == j]<- NA
+	bdd_reduite$CTv_PrestaB[bdd_reduite$ID == j]<- NA
+	bdd_reduite$CTv_PrestaN[bdd_reduite$ID == j]<- NA
+	bdd_reduite$CTv_ResTechN[bdd_reduite$ID == j]<- NA
+	bdd_reduite$FGestion_v[bdd_reduite$ID == j]<- NA
+	bdd_reduite$C_ProdPlt_Alloue_v[bdd_reduite$ID == j]<- NA
+	bdd_reduite$solde_souscrip_V[bdd_reduite$ID == j]<- NA
+	bdd_reduite$charge_reass_V[bdd_reduite$ID == j]<- NA
+	bdd_reduite$exigence_V[bdd_reduite$ID == j]<- NA
+}
+
+bdd_vie = subset(bdd_reduite, bdd_reduite$branche ==1)
+for(j in bdd_vie$ID)
+{
+	bdd_reduite$CTnv_CotisB[bdd_reduite$ID == j]<- NA
+	bdd_reduite$CTnv_CotisN[bdd_reduite$ID == j]<- NA
+	bdd_reduite$CTnv_ProdTech[bdd_reduite$ID == j]<- NA
+	bdd_reduite$CTnv_CotisB[bdd_reduite$ID == j]<- NA
+	bdd_reduite$CTnv_FAcq[bdd_reduite$ID == j]<- NA
+	bdd_reduite$CTnv_CgTech[bdd_reduite$ID == j]<- NA
+	bdd_reduite$CTnv_CgSinitresB[bdd_reduite$ID == j]<- NA
+	bdd_reduite$CTnv_CgSinitresN[bdd_reduite$ID == j]<- NA
+	bdd_reduite$CTnv_ResTechN[bdd_reduite$ID == j]<- NA
+	bdd_reduite$FGestion_nv[bdd_reduite$ID == j]<- NA
+	bdd_reduite$charge_reassurance_NV[bdd_reduite$ID == j]<- NA
+	bdd_reduite$exigence_NV[bdd_reduite$ID == j]<- NA
+}
+
+# pour toutes les mutuelles non substituantes, les variables afférentes passent à NA
+
+bdd_x = subset(bdd_reduite, bdd_reduite$nb_subst =="#N/D")
+for(j in bdd_x$ID)
+{
+	bdd_reduite$PT_ced_subst[bdd_reduite$ID == j]<- NA
+	bdd_reduite$cotis_ced_subst[bdd_reduite$ID == j]<- NA
+	bdd_reduite$cotis_acc_subst[bdd_reduite$ID == j]<- NA
+	bdd_reduite$PT_acc_subst[bdd_reduite$ID == j]<- NA
+}
+
+bdd_reduite$est_subst <- ifelse( bdd_reduite$nb_subst!=0,1,0)
+
+show(ncol(bdd_reduite))
+show(nrow(bdd_reduite))
+
+return (bdd_reduite)
+}	
