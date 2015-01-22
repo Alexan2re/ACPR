@@ -1,0 +1,103 @@
+
+analyse_2_d<-function(bdd_reduite)
+{
+
+#recherche de corrélation pour les non vie
+rest_nv = subset(bdd_reduite, bdd_reduite$branche ==0)
+x = cbind(rest_nv$CTnv_CotisN, rest_nv$CTnv_CgSinitresN,rest_nv$BP_PT, rest_nv$BA_PTreass, rest_nv$Plt_tot_VNC, rest_nv$C6_exc, rest_nv$C5_exc, rest_nv$BA_tot, rest_nv$charge_reassurance_NV, rest_nv$Tete_gp,  rest_nv$est_subst)
+x= na.omit(x)
+correlation_nv  = cor(x, y = NULL, use = "na.or.complete",
+ method = "pearson")
+
+w_2 = c("CTnv_CotisN", "CTnv_CgSinitresN","BP_PT", "BA_PTreass", "Plt_tot_VNC", "C6_exc", "C5_exc", "BA_tot", "charge_reassurance_NV", "Tete_gp", "Est_subst")
+
+
+rownames(correlation_nv) = w_2
+colnames(correlation_nv) = w_2
+show(correlation_nv)
+
+
+print("teste de non nullite des coefficients de correlation pour la non vie")
+print("                                                    ")
+
+liste_test = matrix(0, nrow = ncol(x), ncol = ncol(x))
+
+for(i in 1:ncol(x))
+{
+  for(j in 1:ncol(x))
+  {
+    liste_test[i,j] <-cor.test(x[,i], x[,j])[["p.value"]]
+  }
+}
+
+row.names(liste_test) = w_2
+colnames(liste_test) = w_2
+show(liste_test)
+
+#recherche de corrélation pour les vies
+rest_vie = subset(bdd_reduite, bdd_reduite$branche ==1)
+z = cbind(rest_vie$CTv_CotisN, rest_vie$CTv_PrestaN, rest_vie$BP_PT, rest_vie$BP_PMv, rest_vie$BP_PPEv, rest_vie$CTv_CgTech, rest_vie$Plt_tot_VNC, rest_vie$C6_exc, rest_vie$C5_exc, rest_vie$BA_tot, rest_vie$Tete_gp, rest_vie$est_subst)
+z= na.omit(z)
+
+correlation_v = cor(z, y = NULL, use = "na.or.complete",
+ method = "pearson") 
+
+w1 = c("CTv_CotisN", "CTv_PrestaN","BP_PT", "BP_PMv", "BP_PPEv", "CTv_CgTech", "Plt_tot_VNC", "C6_exc", "C5_exc", "BA_tot","Tete_gp", "Est_subst")
+
+rownames(correlation_v) = w1
+colnames(correlation_v) = w1
+show(correlation_v)
+
+
+print("teste de non nullite des coefficients de correlation pour la vie")
+print("                                                    ")
+liste_test_v = matrix(0, nrow = ncol(z), ncol = ncol(z))
+
+for(i in 1:ncol(z))
+{
+  for(j in 1:ncol(z))
+  {
+    liste_test_v[i,j] <-cor.test(z[,i], z[,j])[["p.value"]]
+  }
+}
+
+row.names(liste_test_v) = w1
+colnames(liste_test_v) = w1
+show(liste_test_v)
+
+#recherche de corrélation pour les mixtes
+rest_mixte = subset(bdd_reduite, bdd_reduite$branche ==2)
+xz = cbind(rest_mixte$CTv_CotisN, rest_mixte$CTv_PrestaN, rest_mixte$BP_PT, rest_mixte$BP_PMv, rest_mixte$BP_PPEv, rest_mixte$CTv_CgTech, rest_mixte$CTnv_CotisN, rest_mixte$CTnv_CgSinitresN, rest_mixte$BA_PTreass, rest_mixte$Plt_tot_VNC, rest_mixte$C6_exc, rest_mixte$C5_exc, rest_mixte$BA_tot, rest_mixte$Tete_gp, rest_mixte$est_subst)
+xz[which(xz == NA)] <- 0
+
+correlation_v = cor(xz, y = NULL, use = "na.or.complete",
+ method = "pearson") 
+
+w1w2 = c("CTv_CotisN", "CTv_PrestaN", "BP_PT", "BP_PMv", "BP_PPEv", "CTv_CgTech","CTnv_CotisN", "CTnv_CgSinitresN","BA_PTreass", "Plt_tot_VNC", "C6_exc", "C5_exc", "BA_tot", "Tete_gp", "est_subst")
+rownames(correlation_v) = w1w2
+colnames(correlation_v) = w1w2
+show(correlation_v)
+
+
+
+print("teste de non nullite des coefficients de correlation pour les mutuelles mixtes")
+print("                                                    ")
+liste_test_mixte = matrix(0, nrow = ncol(xz), ncol = ncol(xz))
+
+for(i in 1:ncol(xz))
+{
+  for(j in 1:ncol(xz))
+  {
+    liste_test_mixte[i,j] <-cor.test(xz[,i], xz[,j])[["p.value"]]
+  }
+}
+
+row.names(liste_test_mixte) = w1w2
+colnames(liste_test_mixte) = w1w2
+show(liste_test_mixte)
+
+}
+# source("analyse_2_d.R")
+
+#analyse_2_d(bdd)
+	
