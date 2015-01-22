@@ -1,0 +1,140 @@
+# cette fonction prend en parametre la base de donnée créée via la fonction stat_app()
+# puis l'intervalle des variables que l'on veut étudier. Par exemple, si on tape
+# analyse_1_d(bdd,111, 114) on obtient l'analyse 1d des 4 variables P/C
+
+analyse_1_d<-function(bdd_reduite)
+{
+#install.packages("moments")
+library(moments)
+
+##################Analyse du rapport P/C#######################
+#Creation des histogrammes 
+par(mfrow = c(2,2))
+
+for(i in 111:114)
+{
+	indice<-i
+
+# on exlue les mutuelles ayant une valeur supérieure à 600% 
+# cette valeur est purement hypothétique, à voir suivant la variable
+bdd_reduite<- bdd_reduite[bdd_reduite[indice]<600,]
+
+#on omet les na de la variable étudiée et on nomme la nouvelle base sous le nom "rest"
+rest<-na.omit(bdd_reduite[,indice])
+
+# permet de dire qu'une matrice de 2*2 graphes est formée, soit 4 graphes sur la même page
+# utile pour comparer des camemberts ou histogrammes d'un même type
+
+
+# breaks = nombre de subdivisions, paste permet de concaténer des chaînes de caractère, nrow donne le nombre d'individus
+	hist(rest, breaks=30, col="blue", main= paste("histogramme de ", names(bdd_reduite)[indice]), xlab="pourcentage", ylab = "nombre  de mutuelles")
+}
+
+# test du chi2 sur les variables P/C non vie
+y = ifelse(bdd_reduite$PC_net_NV >=0, bdd_reduite$PC_net_NV, NA)
+y = na.omit(y)
+y = as.numeric(y)
+MAT <- matrix( c(rnorm(362, mean =87.27064) ,y) , ncol=2) 
+chisq.test(MAT)   # rejet car p value à 0 -> hyper significatif!!!
+
+c(skewness(y),kurtosis(y)) # asymétrie prononcée de la distribution
+
+# test du chi2 sur les variables P/C dommages individuels
+bdd_reduite = bdd
+y = ifelse(bdd_reduite$PC_dom_indiv >=0, bdd_reduite$PC_dom_indiv, NA)
+y = subset(y , y<500)
+y = na.omit(y)
+y = as.numeric(y)
+MAT <- matrix( c(rnorm(333, mean =124.3524) ,y) , ncol=2) 
+chisq.test(MAT)  # rejet car p value à 0 hyper significatif!!!
+c(skewness(y),kurtosis(y))
+
+#creation des 4 camemberts pour les variables de rapport P/C
+x11() 
+par(mfrow = c(2,2))
+for(i in 111:114)
+{
+	indice<-i
+
+# x1 = la base dd où les individus ont une valeur <100
+# x2 = la base dd où les individus ont une valeur >=100
+# ces bases de données sont utiles pour les camemberts
+
+	x1 <-subset(bdd_reduite, bdd_reduite[indice]<100)
+	x2 <-subset(bdd_reduite, bdd_reduite[indice]>=100)
+
+# crée le camembert du nombre d'individus dans x1 et x2, la fonction round(...) affiche le pourcentage par partie du camembert
+	pie(c(nrow(x1),nrow(x2)), main= paste("Camembert ", names(bdd_reduite)[indice]), labels = c( paste("gains =", round(nrow(x1)/(nrow(x1)+nrow(x2))*100, 0.1) ,"%",sep=""), paste("pertes =", round(nrow(x2)/(nrow(x1)+nrow(x2))*100, 0.1) ,"%",sep="")),col = c("red", "blue"))
+}
+
+################### Analyse de la solvabilite des mutuelles ###############
+# ouvre un nouveau graphe #
+x11() 
+par(mfrow = c(2,2))
+for(i in 127:128)
+{
+
+# on exlue les mutuelles ayant une valeur supérieure à 600% 
+# cette valeur est purement hypothétique, à voir suivant la variable
+bdd_reduite<- bdd_reduite[bdd_reduite[indice]<600,]
+
+#on omet les na de la variable étudiée et on nomme la nouvelle base sous le nom "rest"
+rest<-na.omit(bdd_reduite[,indice])
+
+indice<-i
+
+# 127 (cotis_B_N_reass)
+# 128 (C6_exc), x1 et x2 se découpent par rapport à 0 pour voir la proportion de mutuelles non solvables
+
+if( (indice == 127) || (indice==128) )
+{	
+	x1 <-subset(bdd_reduite, bdd_reduite[indice]>=0)
+	x2 <-subset(bdd_reduite, bdd_reduite[indice]<0)
+}
+
+par(mfrow = c(1,2))
+
+# breaks = nombre de subdivisions, paste permet de concaténer des chaînes de caractère, nrow donne le nombre d'individus
+	hist(rest, breaks=30, col="blue", main= paste("histogramme de ", names(bdd_reduite)[indice]), xlab="pourcentage", ylab = "nombre  de mutuelles")
+
+# permet d'obtenir la densité liée à l'histogramme précédent
+	points(density(rest, bw=.1), type='l', lwd=3, col='red')
+
+# crée le camembert du nombre d'individus dans x1 et x2, la fonction round(...) affiche le pourcentage par partie du camembert
+	pie(c(nrow(x1),nrow(x2)), main= paste("Camembert ", names(bdd_reduite)[indice]), labels = c( paste("gains =", round(nrow(x1)/(nrow(x1)+nrow(x2))*100, 0.1) ,"%",sep=""), paste("pertes =", round(nrow(x2)/(nrow(x1)+nrow(x2))*100, 0.1) ,"%",sep="")),col = c("red", "blue"))
+
+}
+
+###################### repartition mutuelles ###############################
+x11() 
+mixte = (sum(bdd$branche==2)*100)/nrow(bdd)
+vie = (sum(bdd$branche==1)*100)/nrow(bdd)
+non_vie = (sum(bdd$branche==0)*100)/nrow(bdd)
+
+pie( c(mixte,vie,non_vie), labels = c(paste("Mixtes =",round(mixte), "%",sep=""), paste("Uniquement Vie =",round(vie), "%",sep=""), paste("Uniquement Non Vie =",round(non_vie), "%",sep="")), col = c("purple", "blue" , "red"))
+
+#################analyse des placements/ camembert######################################
+
+x11() 
+# somme des valeurs de la varaible placement total en valeur nette comptable, 
+# il faut ommettre les na pour faire cette somme sinon r ne comprend pas
+plt = sum(na.omit(bdd$Plt_tot_VNC))
+
+# puis on calcule la proportion par type de placement
+immo = sum(na.omit(bdd$immo_VNC))*100/plt
+actions = sum(na.omit(bdd$actions_VNC))*100/plt
+oblig = sum(na.omit(bdd$oblig_VNC))*100/plt
+opcvm_fixe = sum(na.omit(bdd$OPCVM_fixe_VNC))*100/plt
+opcvm_var = sum(na.omit(bdd$OPCVM_var_VNC))*100/plt
+depots = sum(na.omit(bdd$depot_VNC))*100/plt
+autre = sum(na.omit(bdd$hypo_VNC)+na.omit(bdd$autre_pret_VNC))*100/plt
+
+#enfin on crée le camembert total
+pie(c(immo,actions,oblig,opcvm_fixe,opcvm_var,depots,autre), labels = c( paste("Immobilier =",round(immo), "%",sep=""), paste("Actions =",round(actions), "%",sep=""), paste("Obligations =",round(oblig),  "%",sep=""), paste("OPCVM fixe =",round(opcvm_fixe), "%",sep=""), paste("OPCVM variable =",round(opcvm_var), "%",sep=""), paste("Dépôts =",round(depots), "%",sep=""), paste("Autre =",round(autre), "%",sep="")),col = c("red", "orange", "yellow", "blue" , "purple", "pink", "white"))
+
+}
+
+
+
+#analyse_1_d(bdd)
+
